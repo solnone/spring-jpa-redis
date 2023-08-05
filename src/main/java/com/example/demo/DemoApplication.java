@@ -23,13 +23,13 @@ public class DemoApplication {
 	}
 
 	@Bean
-	public CacheManager cacheManager(RedisConnectionFactory factory) {
+	CacheManager cacheManager(RedisConnectionFactory factory) {
 
 		RedisSerializationContext.SerializationPair<Object> pair = RedisSerializationContext.SerializationPair
 				.fromSerializer(new GenericJackson2JsonRedisSerializer());
 		RedisCacheConfiguration defaultCacheConfig = RedisCacheConfiguration.defaultCacheConfig()
 				.serializeValuesWith(pair)
-				// .entryTtl(Duration.ofSeconds(30))
+				.entryTtl(Duration.ofHours(72))
 				;
 
 		return RedisCacheManager.builder(RedisCacheWriter.nonLockingRedisCacheWriter(factory))
