@@ -1,12 +1,9 @@
 package com.example.demo;
 
 import java.util.List;
-import java.util.Optional;
 
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,46 +21,43 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 @RestController
 public class DataController {
-  private final DataRepository dataRepository;
 
-  @Cacheable(value = "allData")
+  private final DataService dataService;
+
   @GetMapping("/data")
+  @ResponseStatus(HttpStatus.OK)
   @Transactional(readOnly = true)
   public List<Data> findAll() {
-    return dataRepository.findAll();
+    return dataService.findAll();
   }
 
-  @Cacheable(value = "data", key = "#id")
   @GetMapping("/data/{id}")
   @Transactional(readOnly = true)
-  public Optional<Data> findById(@PathVariable final Long id) {
-    return dataRepository.findById(id);
+  public ResponseEntity<Data> findById(@PathVariable final Long id) {
+    return dataService.findById(id).map(data -> ResponseEntity.ok().body(data))
+        .orElse(ResponseEntity.notFound().build());
   }
 
-  @CacheEvict(value = "allData", allEntries = true)
-  @CachePut(value = "data", key = "#data.id")
-  @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/data")
+  @ResponseStatus(HttpStatus.CREATED)
   @Transactional
   public Data add(@RequestBody final Data data) {
-    return dataRepository.save(data);
+    return dataService.save(data);
   }
 
-  @CacheEvict(value = "allData", allEntries = true)
-  @CachePut(value = "data", key = "#data.id")
   @PutMapping("/data/{id}")
   @ResponseStatus(HttpStatus.OK)
   @Transactional
   public Data save(@PathVariable final Long id, @RequestBody final Data data) {
     data.setId(id);
-    return dataRepository.save(data);
+    return dataService.save(data);
   }
 
-  @CacheEvict(value = { "data", "allData" }, allEntries = true)
   @DeleteMapping("/data/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Transactional
-  public void del(@PathVariable final Long id) {
-    dataRepository.deleteById(id);
+  public void deleteById(@PathVariable final Long id) {
+    dataService.deleteById(id);
   }
+
 }
